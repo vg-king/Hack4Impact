@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #040d12;
+  --bg2: #071520;
+  --surface: rgba(12, 32, 48, 0.8);
+  --surface2: rgba(20, 50, 70, 0.6);
+  --border: rgba(0, 200, 160, 0.15);
+  --text: #e8f4f0;
+  --text2: #7ab3a0;
+  --text3: #3d7060;
+  --teal: hsl(168, 80%, 36%);
+  --teal-bright: hsl(168, 90%, 50%);
+  --coral: hsl(340, 75%, 55%);
+  --amber: hsl(38, 92%, 50%);
+  --emerald: hsl(160, 84%, 39%);
+  --indigo: hsl(239, 84%, 67%);
+  --gradient-primary: linear-gradient(135deg, hsl(168,80%,36%), hsl(180,60%,25%));
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Sora', system-ui, sans-serif;
+  min-height: 100vh;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 3px; }
+
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+}
+.glass-hover { transition: all 0.3s ease; }
+.glass-hover:hover {
+  background: var(--surface2);
+  border-color: rgba(0, 200, 160, 0.3);
+  transform: translateY(-2px);
+}
+.text-gradient {
+  background: linear-gradient(135deg, var(--teal-bright), hsl(160,90%,60%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(0,200,160,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,160,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.nav-active {
+  background: rgba(0,200,160,0.1);
+  border-left: 2px solid var(--teal);
+}
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.leaflet-container { background: var(--bg2) !important; border-radius: 12px; }
+.leaflet-tile-pane { filter: brightness(0.7) saturate(0.8) hue-rotate(180deg); }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+.animate-float { animation: float 6s ease-in-out infinite; }
