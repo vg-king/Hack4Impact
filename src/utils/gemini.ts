@@ -1,4 +1,5 @@
 const KEY = import.meta.env.VITE_GEMINI_API_KEY
+const CLAUDE_KEY = import.meta.env.VITE_CLAUDE_API_KEY
 
 async function callGemini(prompt: string, imagePart?: { data: string; mimeType: string }): Promise<string> {
   const parts: object[] = imagePart ? [{ inlineData: imagePart }, { text: prompt }] : [{ text: prompt }]
@@ -109,3 +110,33 @@ export const analyzeGenomicRisk = (variants: string[]) =>
 Provide: disease risk percentages, pharmacogenomic drug alerts, screening recommendations.
 Reference OMIM, ClinVar, PharmGKB. Be evidence-based.`
   )
+
+// ── Claude timeline analysis ──
+export const analyzeHealthJourneyWithClaude = async (prompt: string): Promise<string> => {
+  if (!CLAUDE_KEY) {
+    throw new Error('Missing VITE_CLAUDE_API_KEY in .env')
+  }
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': CLAUDE_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 700,
+      temperature: 0.3,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  })
+
+  if (!res.ok) {
+    throw new Error(`Claude ${res.status}: Check VITE_CLAUDE_API_KEY in .env`)
+  }
+
+  const data = await res.json()
+  const first = data.content?.[0]
+  return typeof first?.text === 'string' && first.text.trim() ? first.text : 'No response.'
+}

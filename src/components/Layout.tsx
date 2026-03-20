@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import DNABackground from './DNABackground'
 import UIAnimationEnhancer from './UIAnimationEnhancer'
 import { AlertTriangle, Zap } from 'lucide-react'
 
@@ -18,9 +17,8 @@ export default function Layout() {
     <div
       ref={layoutRef}
       className="relative isolate min-h-screen"
-      style={{ background: 'linear-gradient(180deg, rgba(4,13,18,0.82), rgba(4,13,18,0.9))' }}
+      style={{ background: 'transparent' }}
     >
-      <DNABackground />
       <UIAnimationEnhancer scope={layoutRef} />
 
       <header
