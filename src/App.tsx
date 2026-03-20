@@ -1,5 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
+import Home from './pages/Home'
+import Diagnostics from './pages/Diagnostics'
+import FindCare from './pages/FindCare'
+import Wellness from './pages/Wellness'
 import Dashboard from './pages/Dashboard'
 import AIAssistant from './pages/AIAssistant'
 import FileAnalyzer from './pages/FileAnalyzer'
@@ -23,7 +27,11 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/diagnostics" element={<Diagnostics />} />
+          <Route path="/find-care" element={<FindCare />} />
+          <Route path="/wellness" element={<Wellness />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/ai-assistant" element={<AIAssistant />} />
           <Route path="/file-analyzer" element={<FileAnalyzer />} />
           <Route path="/find-doctors" element={<FindDoctors />} />

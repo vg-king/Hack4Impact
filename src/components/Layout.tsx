@@ -1,36 +1,71 @@
-import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
-import Sidebar from './Sidebar'
-import { Menu } from 'lucide-react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { useRef } from 'react'
+import { NavLink, Outlet } from 'react-router-dom'
+import DNABackground from './DNABackground'
+import UIAnimationEnhancer from './UIAnimationEnhancer'
+import { AlertTriangle, Zap } from 'lucide-react'
 
 export default function Layout() {
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const layoutRef = useRef<HTMLDivElement>(null)
+
+  const navLinks = [
+    { to: '/', label: 'Home' },
+    { to: '/diagnostics', label: 'Diagnostics' },
+    { to: '/find-care', label: 'Find Care' },
+    { to: '/wellness', label: 'Wellness' },
+  ]
+
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg)' }}>
-      <div className="hidden lg:flex">
-        <Sidebar />
-      </div>
-      <AnimatePresence>
-        {mobileOpen && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="lg:hidden fixed inset-0 z-40"
-              style={{ background: 'rgba(0,0,0,0.7)' }}
-              onClick={() => setMobileOpen(false)} />
-            <motion.div initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="lg:hidden fixed left-0 top-0 bottom-0 z-50">
-              <Sidebar onClose={() => setMobileOpen(false)} />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-      <button onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-30 p-2 rounded-lg glass">
-        <Menu className="w-5 h-5" style={{ color: 'var(--teal)' }} />
-      </button>
-      <main className="flex-1 overflow-y-auto">
+    <div
+      ref={layoutRef}
+      className="relative isolate min-h-screen"
+      style={{ background: 'linear-gradient(180deg, rgba(4,13,18,0.82), rgba(4,13,18,0.9))' }}
+    >
+      <DNABackground />
+      <UIAnimationEnhancer scope={layoutRef} />
+
+      <header
+        className="fixed top-0 left-0 right-0 z-40 h-14"
+        style={{ background: 'rgba(5, 14, 20, 0.82)', borderBottom: '1px solid var(--border)', backdropFilter: 'blur(10px)' }}
+      >
+        <div className="max-w-[1280px] mx-auto h-full px-4 lg:px-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'var(--gradient-primary)' }}>
+              <Zap className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gradient leading-none">MedNexus</p>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--text3)' }}>AI Healthcare v3</p>
+            </div>
+          </div>
+
+          <nav className="hidden md:flex items-center gap-2">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.to === '/'}
+                className={({ isActive }) =>
+                  `px-3 py-1.5 rounded-md text-sm transition-colors ${isActive ? 'glass' : ''}`
+                }
+                style={({ isActive }) => ({ color: isActive ? 'var(--text)' : 'var(--text2)' })}
+              >
+                {link.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <NavLink
+            to="/emergency"
+            className="px-3 py-1.5 rounded-md text-sm font-semibold flex items-center gap-2"
+            style={{ background: 'rgba(170, 36, 36, 0.22)', color: '#ff8e8e', border: '1px solid rgba(230, 88, 88, 0.5)' }}
+          >
+            <AlertTriangle className="w-4 h-4" />
+            Emergency SOS
+          </NavLink>
+        </div>
+      </header>
+
+      <main className="relative z-10 pt-14 min-h-screen">
         <Outlet />
       </main>
     </div>
