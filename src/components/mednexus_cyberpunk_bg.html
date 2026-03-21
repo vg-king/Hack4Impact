@@ -1,0 +1,308 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  html,body{margin:0;padding:0;background:#00060e;overflow:hidden;width:100%;height:500px;}
+  canvas{display:block;}
+  .overlay{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+  .logo{font-family:'Courier New',monospace;font-size:28px;font-weight:900;color:rgba(0,255,140,0.9);letter-spacing:0.25em;text-shadow:0 0 30px rgba(0,255,140,0.5);}
+  .tagline{font-family:'Courier New',monospace;font-size:10px;color:rgba(0,200,255,0.6);letter-spacing:0.3em;margin-top:6px;}
+  .cards{display:flex;gap:12px;margin-top:32px;}
+  .card{background:rgba(0,255,140,0.04);border:1px solid rgba(0,255,140,0.2);padding:12px 18px;font-family:'Courier New',monospace;color:rgba(0,255,140,0.7);font-size:10px;letter-spacing:0.1em;}
+  .card span{display:block;font-size:8px;color:rgba(0,200,255,0.4);margin-bottom:4px;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="overlay">
+  <div class="logo">MEDNEXUS</div>
+  <div class="tagline">AI HEALTHCARE · CYBERPUNK EDITION · KIIT</div>
+  <div class="cards">
+    <div class="card"><span>MODULE 01</span>PRESCRIPTION OCR</div>
+    <div class="card"><span>MODULE 02</span>AI ASSISTANT</div>
+    <div class="card"><span>MODULE 03</span>CV DISEASE DETECT</div>
+  </div>
+</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let t = 0, scanY = 0, ecgOffset = 0;
+let animId;
+
+function resize(){
+  canvas.width = canvas.offsetWidth || window.innerWidth;
+  canvas.height = 500;
+}
+resize();
+
+const W = () => canvas.width;
+const H = () => canvas.height;
+
+const PARTICLES = Array.from({length:70},()=>({
+  x:Math.random(), y:Math.random(),
+  r:Math.random()*1.3+0.3,
+  vx:(Math.random()-0.5)*0.0002,
+  vy:(Math.random()-0.5)*0.0002,
+  hue:Math.random()<0.5?160:Math.random()<0.5?190:320,
+  a:Math.random()*0.45+0.15
+}));
+
+const BUILDINGS = Array.from({length:24},(_,i)=>({
+  x:i/24, w:0.026+Math.random()*0.022,
+  h:0.07+Math.random()*0.2,
+  wins:Array.from({length:Math.floor(Math.random()*10+3)},()=>({
+    r:Math.random(), c:Math.random(),
+    on:Math.random()>0.35,
+    flick:Math.random()>0.82
+  }))
+}));
+
+const DNA_PAIRS = 16;
+const ECG_PTS = 280;
+const HEX_COLS = 13, HEX_ROWS = 8;
+
+const NODES = Array.from({length:24},()=>({
+  x:Math.random(), y:Math.random(),
+  pulse:Math.random()*Math.PI*2,
+  speed:0.007+Math.random()*0.012,
+  r:1.8+Math.random()*2.5,
+  active:Math.random()>0.4
+}));
+const EDGES = [];
+for(let i=0;i<NODES.length;i++)
+  for(let j=i+1;j<NODES.length;j++){
+    const dx=NODES[i].x-NODES[j].x, dy=NODES[i].y-NODES[j].y;
+    if(Math.sqrt(dx*dx+dy*dy)<0.2) EDGES.push([i,j,Math.random()]);
+  }
+
+const STREAMS = Array.from({length:16},()=>({
+  x:Math.random(), y:Math.random(),
+  speed:0.0007+Math.random()*0.0013,
+  chars:Array.from({length:11},()=>String.fromCharCode(0x30A0+Math.floor(Math.random()*96))),
+  a:0.07+Math.random()*0.11
+}));
+
+const MOLS = Array.from({length:5},()=>({
+  cx:0.15+Math.random()*0.7, cy:0.1+Math.random()*0.75,
+  r:0.035+Math.random()*0.045,
+  speed:(Math.random()>0.5?1:-1)*(0.003+Math.random()*0.004),
+  e:Math.floor(2+Math.random()*3),
+  phase:Math.random()*Math.PI*2,
+  hue:[160,190,200,310,280][Math.floor(Math.random()*5)]
+}));
+
+function ecgVal(x, off){
+  const p = (x+off)%1;
+  if(p<0.08) return Math.sin(p*Math.PI/0.08)*0.017;
+  if(p<0.18) return 0;
+  if(p<0.21) return -Math.sin((p-0.18)*Math.PI/0.03)*0.011;
+  if(p<0.245) return Math.sin((p-0.21)*Math.PI/0.035)*0.1;
+  if(p<0.28) return -Math.sin((p-0.245)*Math.PI/0.035)*0.028;
+  if(p<0.38) return 0;
+  if(p<0.52) return Math.sin((p-0.38)*Math.PI/0.14)*0.022;
+  return 0;
+}
+
+function draw(){
+  const w=W(), h=H();
+  ctx.clearRect(0,0,w,h);
+
+  // BG
+  const bg=ctx.createRadialGradient(w*.5,h*.4,0,w*.5,h*.5,w*.8);
+  bg.addColorStop(0,"rgba(3,14,22,1)");
+  bg.addColorStop(.6,"rgba(1,8,15,1)");
+  bg.addColorStop(1,"rgba(0,3,8,1)");
+  ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+
+  // HEX GRID
+  const hs=w/HEX_COLS/Math.sqrt(3);
+  for(let row=0;row<HEX_ROWS+2;row++)
+    for(let col=0;col<HEX_COLS+1;col++){
+      const hx=col*hs*Math.sqrt(3)+(row%2)*hs*Math.sqrt(3)*.5;
+      const hy=row*hs*1.5;
+      const pulse=Math.sin(t*.6+row*.4+col*.3)*.5+.5;
+      ctx.beginPath();
+      for(let s=0;s<6;s++){
+        const a=(Math.PI/3)*s-Math.PI/6;
+        const px=hx+hs*.9*Math.cos(a), py=hy+hs*.9*Math.sin(a);
+        s===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+      }
+      ctx.closePath();
+      ctx.strokeStyle=`rgba(0,200,140,${.022+pulse*.022})`;
+      ctx.lineWidth=.5; ctx.stroke();
+    }
+
+  // BUILDINGS
+  const skyH=h*.26;
+  BUILDINGS.forEach(b=>{
+    const bx=b.x*w, bw=b.w*w, bh=b.h*skyH, by=h-bh;
+    const bg2=ctx.createLinearGradient(bx,by,bx,h);
+    bg2.addColorStop(0,"rgba(0,25,42,0.88)");
+    bg2.addColorStop(1,"rgba(0,8,16,0.96)");
+    ctx.fillStyle=bg2; ctx.fillRect(bx,by,bw,bh);
+    ctx.strokeStyle="rgba(0,210,170,0.2)"; ctx.lineWidth=.7; ctx.strokeRect(bx,by,bw,bh);
+    b.wins.forEach(win=>{
+      if(!win.on) return;
+      const flick=win.flick&&Math.sin(t*8+win.c*10)>.7;
+      ctx.fillStyle=flick?"rgba(255,170,60,0.18)":"rgba(0,190,255,0.17)";
+      ctx.fillRect(bx+win.c*bw*.8+bw*.1, by+win.r*bh*.85+bh*.05, bw*.08, bh*.04);
+    });
+    ctx.fillStyle=`rgba(255,50,50,${Math.sin(t*3+b.x*10)>.82?.9:.08})`;
+    ctx.beginPath(); ctx.arc(bx+bw/2,by-3,2,0,Math.PI*2); ctx.fill();
+  });
+
+  // REFLECTION
+  const rg=ctx.createLinearGradient(0,h*.73,0,h);
+  rg.addColorStop(0,"rgba(0,180,120,0)");
+  rg.addColorStop(.4,"rgba(0,180,120,0.055)");
+  rg.addColorStop(1,"rgba(0,60,40,0)");
+  ctx.fillStyle=rg; ctx.fillRect(0,h*.73,w,h*.27);
+
+  // DNA
+  const dnaX=w*.07, dnaH=h*.68, dnaTop=h*.13, dnaAmp=w*.026;
+  for(let i=0;i<DNA_PAIRS*3;i++){
+    const frac=i/(DNA_PAIRS*3);
+    const y=dnaTop+frac*dnaH;
+    const phase=frac*Math.PI*4+t*.8;
+    const x1=dnaX+Math.sin(phase)*dnaAmp;
+    const x2=dnaX+Math.sin(phase+Math.PI)*dnaAmp;
+    const alpha=.22+Math.sin(phase)*.13;
+    if(i>0){
+      const pf=(i-1)/(DNA_PAIRS*3), py=dnaTop+pf*dnaH, pp=pf*Math.PI*4+t*.8;
+      ctx.beginPath(); ctx.moveTo(dnaX+Math.sin(pp)*dnaAmp,py); ctx.lineTo(x1,y);
+      ctx.strokeStyle=`rgba(0,255,155,${alpha*.65})`; ctx.lineWidth=1.4; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(dnaX+Math.sin(pp+Math.PI)*dnaAmp,py); ctx.lineTo(x2,y);
+      ctx.strokeStyle=`rgba(0,175,255,${alpha*.65})`; ctx.lineWidth=1.4; ctx.stroke();
+    }
+    if(i%3===0){
+      const ra=Math.abs(Math.sin(phase))*.45+.13;
+      ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2,y);
+      ctx.strokeStyle=`rgba(175,70,255,${ra})`; ctx.lineWidth=1; ctx.stroke();
+      ctx.beginPath(); ctx.arc(x1,y,2.2,0,Math.PI*2);
+      ctx.fillStyle=`rgba(0,255,155,${ra+.18})`; ctx.fill();
+      ctx.beginPath(); ctx.arc(x2,y,2.2,0,Math.PI*2);
+      ctx.fillStyle=`rgba(0,175,255,${ra+.18})`; ctx.fill();
+    }
+  }
+  ctx.font="8px monospace"; ctx.fillStyle="rgba(0,255,155,0.28)";
+  ctx.fillText("DNA//SEQUENCE",dnaX-20,dnaTop-10);
+
+  // ECG
+  ecgOffset+=.004;
+  const ecgYc=h*.5, ecgXs=w*.18, ecgXe=w*.82, ecgW=ecgXe-ecgXs, ecgA=h*.085;
+  ctx.beginPath();
+  for(let i=0;i<=ECG_PTS;i++){
+    const xf=i/ECG_PTS, px=ecgXs+xf*ecgW, py=ecgYc-ecgVal(xf,ecgOffset)*ecgA*10;
+    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  const eg=ctx.createLinearGradient(ecgXs,0,ecgXe,0);
+  eg.addColorStop(0,"rgba(0,255,120,0)");
+  eg.addColorStop(.3,"rgba(0,255,120,0.14)");
+  eg.addColorStop(.7,"rgba(0,255,170,0.38)");
+  eg.addColorStop(.92,"rgba(0,255,120,0.55)");
+  eg.addColorStop(1,"rgba(0,255,120,0.04)");
+  ctx.strokeStyle=eg; ctx.lineWidth=1.8; ctx.stroke();
+  // glow
+  ctx.beginPath();
+  for(let i=0;i<=ECG_PTS;i++){
+    const xf=i/ECG_PTS, px=ecgXs+xf*ecgW, py=ecgYc-ecgVal(xf,ecgOffset)*ecgA*10;
+    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  ctx.strokeStyle="rgba(0,255,120,0.06)"; ctx.lineWidth=9; ctx.stroke();
+  ctx.font="8px monospace"; ctx.fillStyle="rgba(0,255,120,0.35)";
+  ctx.fillText("CARDIAC//MONITOR",ecgXs,ecgYc-ecgA-13);
+  ctx.fillStyle="rgba(0,255,120,0.65)"; ctx.font="bold 10px monospace";
+  ctx.fillText("♥ 72 BPM",ecgXe-65,ecgYc-ecgA-13);
+
+  // MOLECULES
+  MOLS.forEach(mol=>{
+    const mx=mol.cx*w, my=mol.cy*h, mr=mol.r*Math.min(w,h);
+    mol.phase+=mol.speed;
+    ctx.beginPath(); ctx.arc(mx,my,3.2,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${mol.hue},100%,70%,0.48)`; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(mx,my,mr,mr*.36,mol.phase*.3,0,Math.PI*2);
+    ctx.strokeStyle=`hsla(${mol.hue},80%,65%,0.1)`; ctx.lineWidth=.8; ctx.stroke();
+    for(let e=0;e<mol.e;e++){
+      const ea=mol.phase+(e/mol.e)*Math.PI*2;
+      const ex=mx+Math.cos(ea)*mr, ey=my+Math.sin(ea)*mr*.36;
+      ctx.beginPath(); ctx.arc(ex,ey,2,0,Math.PI*2);
+      ctx.fillStyle=`hsla(${mol.hue},100%,80%,0.68)`; ctx.fill();
+    }
+  });
+
+  // NEURAL NET
+  EDGES.forEach(([i,j,phase])=>{
+    const a=NODES[i], b=NODES[j];
+    const sig=Math.sin(t*1.5+phase*Math.PI*2)*.5+.5;
+    ctx.beginPath(); ctx.moveTo(a.x*w,a.y*h); ctx.lineTo(b.x*w,b.y*h);
+    ctx.strokeStyle=`rgba(0,155,255,${.035+sig*.075})`; ctx.lineWidth=.55; ctx.stroke();
+    if(sig>.76){
+      const prog=((t*.5+phase)%1);
+      const px=a.x*w+(b.x-a.x)*w*prog, py=a.y*h+(b.y-a.y)*h*prog;
+      ctx.beginPath(); ctx.arc(px,py,1.8,0,Math.PI*2);
+      ctx.fillStyle="rgba(0,195,255,0.58)"; ctx.fill();
+    }
+  });
+  NODES.forEach(n=>{
+    n.pulse+=n.speed;
+    const g=Math.sin(n.pulse)*.5+.5;
+    ctx.beginPath(); ctx.arc(n.x*w,n.y*h,n.r+g*1.8,0,Math.PI*2);
+    ctx.fillStyle=n.active?`rgba(0,195,255,${.28+g*.38})`:`rgba(0,90,150,${.12+g*.1})`;
+    ctx.fill();
+  });
+
+  // DATA STREAMS
+  STREAMS.forEach(s=>{
+    s.y+=s.speed; if(s.y>1){s.y=0;s.x=Math.random();}
+    s.chars.forEach((ch,idx)=>{
+      ctx.font="9px monospace";
+      ctx.fillStyle=`rgba(0,255,120,${s.a*(1-idx/s.chars.length)})`;
+      ctx.fillText(ch,s.x*w,(s.y+idx*.018)*h);
+    });
+  });
+
+  // PARTICLES
+  PARTICLES.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0)p.x=1; if(p.x>1)p.x=0;
+    if(p.y<0)p.y=1; if(p.y>1)p.y=0;
+    ctx.beginPath(); ctx.arc(p.x*w,p.y*h,p.r,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${p.hue},100%,70%,${p.a*(0.58+Math.sin(t+p.x*10)*.38)})`;
+    ctx.fill();
+  });
+
+  // SCANLINE
+  scanY+=.0014; if(scanY>1)scanY=0;
+  const sg=ctx.createLinearGradient(0,scanY*h-38,0,scanY*h+38);
+  sg.addColorStop(0,"rgba(0,255,140,0)");
+  sg.addColorStop(.5,"rgba(0,255,140,0.038)");
+  sg.addColorStop(1,"rgba(0,255,140,0)");
+  ctx.fillStyle=sg; ctx.fillRect(0,scanY*h-38,w,76);
+
+  // VIGNETTE
+  const vg=ctx.createRadialGradient(w/2,h/2,h*.18,w/2,h/2,h*.82);
+  vg.addColorStop(0,"rgba(0,0,0,0)");
+  vg.addColorStop(1,"rgba(0,0,6,0.68)");
+  ctx.fillStyle=vg; ctx.fillRect(0,0,w,h);
+
+  // HUD CORNERS
+  [[22,22],[w-22,22],[22,h-22],[w-22,h-22]].forEach(([cx,cy],idx)=>{
+    const sx=[[1,1],[-1,1],[1,-1],[-1,-1]][idx];
+    ctx.strokeStyle=`rgba(0,255,140,${.28+Math.sin(t*.8+idx)*.14})`;
+    ctx.lineWidth=1.4; ctx.beginPath();
+    ctx.moveTo(cx,cy+sx[1]*22); ctx.lineTo(cx,cy); ctx.lineTo(cx+sx[0]*22,cy);
+    ctx.stroke();
+  });
+  ctx.font="8px monospace"; ctx.fillStyle="rgba(0,255,140,0.3)";
+  ctx.fillText(`SYS//ONLINE`,32,h-24);
+  ctx.fillStyle="rgba(0,175,255,0.28)";
+  ctx.fillText("NEURAL//ACTIVE",w-110,h-24);
+
+  t+=.012;
+  animId=requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

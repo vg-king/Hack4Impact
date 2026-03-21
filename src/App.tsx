@@ -21,35 +21,42 @@ import DrugInteractions from './pages/DrugInteractions'
 import PrescriptionOCR from './pages/PrescriptionOCR'
 import CVDiseaseDetection from './pages/CVDiseaseDetection'
 import NotFound from './pages/NotFound'
+import MedNexusBg from './components/MedNexusBg.jsx'
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/diagnostics" element={<Diagnostics />} />
-          <Route path="/find-care" element={<FindCare />} />
-          <Route path="/wellness" element={<Wellness />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/ai-assistant" element={<AIAssistant />} />
-          <Route path="/file-analyzer" element={<FileAnalyzer />} />
-          <Route path="/find-doctors" element={<FindDoctors />} />
-          <Route path="/pharmacy" element={<PharmacyFinder />} />
-          <Route path="/diet" element={<DietPlans />} />
-          <Route path="/emergency" element={<EmergencySOS />} />
-          <Route path="/hospital-ops" element={<HospitalOps />} />
-          <Route path="/mental-health" element={<MentalHealth />} />
-          <Route path="/predictive-risk" element={<PredictiveRisk />} />
-          <Route path="/genomics" element={<GenomicIntelligence />} />
-          <Route path="/iot-wearables" element={<IoTWearables />} />
-          <Route path="/blockchain-ehr" element={<BlockchainEHR />} />
-          <Route path="/drug-interactions" element={<DrugInteractions />} />
-          <Route path="/prescription-ocr" element={<PrescriptionOCR />} />
-          <Route path="/cv-detection" element={<CVDiseaseDetection />} />
-        </Route>
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <div style={{ position: 'relative', minHeight: '100vh' }}>
+      <MedNexusBg />
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/diagnostics" element={<Diagnostics />} />
+              <Route path="/find-care" element={<FindCare />} />
+              <Route path="/wellness" element={<Wellness />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/ai-assistant" element={<AIAssistant />} />
+              <Route path="/file-analyzer" element={<FileAnalyzer />} />
+              <Route path="/find-doctors" element={<FindDoctors />} />
+              <Route path="/pharmacy" element={<PharmacyFinder />} />
+              <Route path="/diet" element={<DietPlans />} />
+              <Route path="/emergency" element={<EmergencySOS />} />
+              <Route path="/hospital-ops" element={<HospitalOps />} />
+              <Route path="/mental-health" element={<MentalHealth />} />
+              <Route path="/predictive-risk" element={<PredictiveRisk />} />
+              <Route path="/genomics" element={<GenomicIntelligence />} />
+              <Route path="/iot-wearables" element={<IoTWearables />} />
+              <Route path="/blockchain-ehr" element={<BlockchainEHR />} />
+              <Route path="/blockchain" element={<BlockchainEHR />} />
+              <Route path="/drug-interactions" element={<DrugInteractions />} />
+              <Route path="/prescription-ocr" element={<PrescriptionOCR />} />
+              <Route path="/cv-detection" element={<CVDiseaseDetection />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </div>
+    </div>
   )
 }

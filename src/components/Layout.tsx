@@ -12,13 +12,14 @@ export default function Layout() {
     { to: '/diagnostics', label: 'Diagnostics' },
     { to: '/find-care', label: 'Find Care' },
     { to: '/wellness', label: 'Wellness' },
+    { to: '/blockchain-ehr', label: 'Blockchain' },
   ]
 
   return (
     <div
       ref={layoutRef}
       className="relative isolate min-h-screen"
-      style={{ background: 'linear-gradient(180deg, rgba(4,13,18,0.82), rgba(4,13,18,0.9))' }}
+      style={{ background: 'linear-gradient(180deg, rgba(4,13,18,0.15), rgba(4,13,18,0.2))' }}
     >
       <DNABackground />
       <UIAnimationEnhancer scope={layoutRef} />
