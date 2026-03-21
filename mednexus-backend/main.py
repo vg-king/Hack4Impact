@@ -19,9 +19,7 @@ from routers import (
 )
 
 BACKEND_ROOT = Path(__file__).resolve().parent
-FRONTEND_ROOT = BACKEND_ROOT.parent
 load_dotenv(BACKEND_ROOT / ".env")
-load_dotenv(FRONTEND_ROOT / ".env", override=False)
 
 app = FastAPI(title="MedNexus API", version="3.0.0")
 

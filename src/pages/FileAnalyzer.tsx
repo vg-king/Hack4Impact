@@ -4,7 +4,7 @@ import {
   FileSearch, Upload, File, Image, FileText, Archive,
   Music, Video, CheckCircle, AlertCircle, Loader2, X, Brain
 } from 'lucide-react'
-import { analyzeImageWithGemini } from '../utils/gemini'
+import { cvAPI } from '../utils/api'
 
 interface AnalyzedFile {
   name: string
@@ -23,14 +23,6 @@ const getIcon = (type: string): React.ElementType => {
   if (type.startsWith('video')) return Video
   return File
 }
-
-const toBase64 = (file: File): Promise<string> =>
-  new Promise((res, rej) => {
-    const r = new FileReader()
-    r.onload = () => res((r.result as string).split(',')[1])
-    r.onerror = rej
-    r.readAsDataURL(file)
-  })
 
 const simulateAnalysis = (file: File): Promise<string> => {
   return new Promise(resolve => {
@@ -80,10 +72,17 @@ export default function FileAnalyzer() {
       const file = fileList[i]
       try {
         let result: string
-        const canUseGemini = file.type.startsWith('image/') || file.type === 'application/pdf'
-        if (canUseGemini) {
-          const b64 = await toBase64(file)
-          result = await analyzeImageWithGemini(b64, file.type, file.name)
+        const canUseBackendVision = file.type.startsWith('image/')
+        if (canUseBackendVision) {
+          const response = await cvAPI.detect(file, 'general') as {
+            ai_summary?: string
+            detections?: Array<{ condition?: string; confidence?: number }>
+          }
+          const det = (response.detections || [])
+            .slice(0, 5)
+            .map((d) => `- ${d.condition || 'finding'} (${d.confidence || 0}%)`)
+            .join('\n')
+          result = `${response.ai_summary || 'Image analyzed successfully.'}${det ? `\n\nTop detections:\n${det}` : ''}`
         } else {
           result = await simulateAnalysis(file)
         }
@@ -93,7 +92,7 @@ export default function FileAnalyzer() {
       } catch {
         setFiles(prev => prev.map(pf =>
           pf.name === file.name && pf.status === 'analyzing'
-            ? { ...pf, status: 'error', result: 'Analysis failed. Check VITE_GEMINI_API_KEY in .env' }
+            ? { ...pf, status: 'error', result: 'Analysis failed. Ensure backend is running and AI key is set in mednexus-backend/.env' }
             : pf
         ))
       }

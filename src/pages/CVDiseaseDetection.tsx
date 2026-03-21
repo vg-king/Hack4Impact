@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Camera, Upload, Loader2, AlertTriangle, CheckCircle, Eye, Scan } from 'lucide-react'
-import { detectDiseaseFromImage } from '../utils/gemini'
+import { cvAPI } from '../utils/api'
 
 type Category = 'skin' | 'eye' | 'hair' | 'face' | 'chest-xray' | 'wound' | 'general'
 
@@ -41,11 +41,6 @@ const categories: { id: Category; label: string; desc: string; color: string; ex
   { id: 'general', label: 'General body scan', desc: 'Any body part — AI detects all visible abnormalities', color: 'var(--teal)',
     examples: ['Any visible condition', 'Multiple findings', 'Unknown symptom'] },
 ]
-
-const toBase64 = (file: File): Promise<string> =>
-  new Promise((res, rej) => {
-    const r = new FileReader(); r.onload = () => res((r.result as string).split(',')[1]); r.onerror = rej; r.readAsDataURL(file)
-  })
 
 const riskColor = (risk: string) =>
   risk === 'critical' ? '#D85A30' : risk === 'high' ? '#D85A30' : risk === 'medium' ? '#BA7517' : '#1D9E75'
@@ -87,15 +82,41 @@ export default function CVDiseaseDetection() {
     setStatus('analyzing'); setResult(null); setErrMsg('')
     const url = URL.createObjectURL(file); setPreviewUrl(url)
     try {
-      const b64 = await toBase64(file)
-      const raw = await detectDiseaseFromImage(b64, file.type, selectedCat)
-      const clean = raw.replace(/```json|```/g, '').trim()
-      const parsed: CVResult = JSON.parse(clean)
+      const response = await cvAPI.detect(file, selectedCat) as {
+        detections?: Array<{ condition?: string; confidence?: number; bbox_percent?: number[]; bbox?: number[] }>
+        ai_summary?: string
+      }
+
+      const detections: Detection[] = (response.detections || []).map((d) => ({
+        condition: d.condition || 'Finding',
+        icd10: 'N/A',
+        confidence: Math.round(d.confidence || 0),
+        severity: Math.min(95, Math.max(10, Math.round((d.confidence || 0) * 0.85))),
+        location: 'image region',
+        bbox_percent: d.bbox_percent || d.bbox || [0, 0, 0, 0],
+        details: 'Detected by CV model. Review clinically.',
+        action: 'Clinical review advised',
+        referral: '',
+        differentials: [],
+      }))
+
+      const upperSummary = (response.ai_summary || '').toUpperCase()
+      const overallRisk = upperSummary.includes('CRITICAL') ? 'critical' : upperSummary.includes('HIGH') ? 'high' : upperSummary.includes('MEDIUM') ? 'medium' : 'low'
+
+      const parsed: CVResult = {
+        detections,
+        overall_risk: overallRisk,
+        urgent: overallRisk === 'critical' || overallRisk === 'high',
+        summary: response.ai_summary || 'AI image analysis complete.',
+      }
+
       setResult(parsed); setStatus('done')
       // Draw bboxes after image loads
       const img = new Image(); img.onload = () => drawBBoxes(parsed.detections, img); img.src = url
-    } catch {
-      setStatus('error'); setErrMsg('Analysis failed. Ensure VITE_GEMINI_API_KEY is set in .env. Try a clearer image.')
+    } catch (err) {
+      setStatus('error')
+      const detail = err instanceof Error ? err.message : 'Unknown backend error'
+      setErrMsg(`Analysis failed: ${detail}`)
     }
   }, [selectedCat])
 

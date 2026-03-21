@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Heart, Brain, BookOpen, Music, Leaf, MessageCircle, Smile, Meh, Frown, Loader2 } from 'lucide-react'
-import { askGemini } from '../utils/gemini'
+import { aiAPI } from '../utils/api'
 
 const moodOptions = [
   { icon: '😄', label: 'Great', value: 5, color: '#1D9E75' },
@@ -44,16 +44,17 @@ export default function MentalHealth() {
     setAiLoading(true)
     const moodLabel = moodOptions.find(m => m.value === mood)?.label || 'okay'
     try {
-      const res = await askGemini(
+      const res = await aiAPI.chat(
         `The user is feeling "${moodLabel}" today (${mood}/5 on mood scale). 
         ${journalEntry ? `They wrote: "${journalEntry}"` : ''}
         Provide empathetic mental health support in 3-4 sentences. 
         Then suggest 2 specific actionable things they can do in the next 30 minutes to feel better.
         Be warm, non-clinical, and genuinely helpful. Do NOT be preachy.`
       )
-      setAiResponse(res)
-    } catch {
-      setAiResponse('Check your VITE_GEMINI_API_KEY in .env to get AI support responses.')
+      setAiResponse(res.reply || 'No response.')
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : 'Unknown backend error'
+      setAiResponse(`Could not get support response: ${detail}`)
     } finally { setAiLoading(false) }
   }
 

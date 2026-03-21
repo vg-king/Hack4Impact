@@ -15,7 +15,7 @@ import {
   UserPlus,
   X,
 } from 'lucide-react'
-import { analyzeHealthJourneyWithClaude, analyzePrescriptionImage } from '../utils/gemini'
+import { aiAPI, prescriptionAPI } from '../utils/api'
 
 interface Drug {
   name: string
@@ -99,14 +99,6 @@ const writeFamilyProfiles = (profiles: FamilyProfile[]) => {
 
 const sevColor = (s: string) => (s === 'high' ? '#D85A30' : s === 'medium' ? '#BA7517' : '#1D9E75')
 
-const toBase64 = (file: File): Promise<string> =>
-  new Promise((res, rej) => {
-    const r = new FileReader()
-    r.onload = () => res((r.result as string).split(',')[1])
-    r.onerror = rej
-    r.readAsDataURL(file)
-  })
-
 export default function PrescriptionOCR() {
   const [status, setStatus] = useState<'idle' | 'reading' | 'done' | 'error'>('idle')
   const [result, setResult] = useState<ParsedRx | null>(null)
@@ -172,16 +164,16 @@ export default function PrescriptionOCR() {
     setJourneyError('')
     setPreviewUrl(URL.createObjectURL(file))
     try {
-      const b64 = await toBase64(file)
-      const raw = await analyzePrescriptionImage(b64, file.type)
-      setRawText(raw)
-      const clean = raw.replace(/```json|```/g, '').trim()
-      const parsed: ParsedRx = JSON.parse(clean)
+      const response = await prescriptionAPI.parse(file)
+      const parsed = (response as { result?: ParsedRx }).result
+      if (!parsed) throw new Error('Invalid OCR response from backend')
+      setRawText(JSON.stringify(parsed, null, 2))
       setResult(parsed)
       setStatus('done')
-    } catch {
+    } catch (err) {
       setStatus('error')
-      setErrMsg('Could not parse prescription. Tip: Check VITE_GEMINI_API_KEY in .env. Raw response stored.')
+      const detail = err instanceof Error ? err.message : 'Unknown backend error'
+      setErrMsg(`Could not parse prescription: ${detail}`)
     }
   }, [])
 
@@ -295,10 +287,11 @@ Keep response concise, in simple English, patient-friendly.`
     setJourneyInsights('')
 
     try {
-      const response = await analyzeHealthJourneyWithClaude(prompt)
-      setJourneyInsights(response)
-    } catch {
-      setJourneyError('Could not analyze journey right now. Check VITE_CLAUDE_API_KEY in .env.')
+      const response = await aiAPI.chat(prompt) as { reply?: string }
+      setJourneyInsights(response.reply || 'No response.')
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : 'Unknown backend error'
+      setJourneyError(`Could not analyze journey right now: ${detail}`)
     } finally {
       setInsightsLoading(false)
     }
@@ -345,10 +338,11 @@ Tone: warm, simple, like a helpful friend — not clinical.`
     setWeeklySummary('')
     setWeeklyError('')
     try {
-      const response = await analyzeHealthJourneyWithClaude(prompt)
-      setWeeklySummary(response)
-    } catch {
-      setWeeklyError('Could not generate weekly summary right now. Check VITE_CLAUDE_API_KEY in .env.')
+      const response = await aiAPI.chat(prompt) as { reply?: string }
+      setWeeklySummary(response.reply || 'No response.')
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : 'Unknown backend error'
+      setWeeklyError(`Could not generate weekly summary right now: ${detail}`)
     } finally {
       setWeeklyLoading(false)
     }

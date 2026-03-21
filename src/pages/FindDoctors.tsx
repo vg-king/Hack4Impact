@@ -34,6 +34,19 @@ export default function FindDoctors() {
   const [search, setSearch] = useState('')
   const [selectedSpec, setSelectedSpec] = useState('All')
   const [selectedDoctor, setSelectedDoctor] = useState<number|null>(null)
+  const [commentInputs, setCommentInputs] = useState<Record<number, string>>({})
+  const [doctorComments, setDoctorComments] = useState<Record<number, string[]>>({})
+
+  const handleAddComment = (doctorId: number) => {
+    const text = (commentInputs[doctorId] || '').trim()
+    if (!text) return
+
+    setDoctorComments((prev) => ({
+      ...prev,
+      [doctorId]: [...(prev[doctorId] || []), text],
+    }))
+    setCommentInputs((prev) => ({ ...prev, [doctorId]: '' }))
+  }
 
   const filtered = useMemo(() => doctors.filter((d) => {
     const matchSearch = d.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -115,16 +128,67 @@ export default function FindDoctors() {
               </div>
               {selectedDoctor === doc.id && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className="mt-3 pt-3 flex gap-2" style={{ borderTop: '1px solid var(--border)' }}>
-                  <a href={`tel:${doc.phone}`}
-                    className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-medium text-white"
-                    style={{ background: 'var(--gradient-primary)' }}>
-                    <Phone className="w-3 h-3" /> Call
-                  </a>
-                  <button className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-medium"
-                    style={{ border: '1px solid var(--border)', color: 'var(--text2)' }}>
-                    <Clock className="w-3 h-3" /> Book Slot
-                  </button>
+                  className="mt-3 pt-3 space-y-3" style={{ borderTop: '1px solid var(--border)' }}>
+                  <div className="flex gap-2">
+                    <a href={`tel:${doc.phone}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-medium text-white"
+                      style={{ background: 'var(--gradient-primary)' }}>
+                      <Phone className="w-3 h-3" /> Call
+                    </a>
+                    <button
+                      type="button"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-medium"
+                      style={{ border: '1px solid var(--border)', color: 'var(--text2)' }}>
+                      <Clock className="w-3 h-3" /> Book Slot
+                    </button>
+                  </div>
+
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="rounded-lg p-3"
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                    <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text)' }}>Patient comments</p>
+
+                    {(doctorComments[doc.id] || []).length > 0 ? (
+                      <div className="space-y-1.5 mb-3 max-h-28 overflow-y-auto pr-1">
+                        {(doctorComments[doc.id] || []).map((comment, idx) => (
+                          <p key={`${doc.id}-comment-${idx}`} className="text-xs px-2 py-1.5 rounded"
+                            style={{ background: 'rgba(0,200,160,0.06)', color: 'var(--text2)', border: '1px solid var(--border)' }}>
+                            {comment}
+                          </p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs mb-3" style={{ color: 'var(--text3)' }}>No comments yet. Be the first to add one.</p>
+                    )}
+
+                    <div className="flex gap-2">
+                      <input
+                        value={commentInputs[doc.id] || ''}
+                        onChange={(e) => setCommentInputs((prev) => ({ ...prev, [doc.id]: e.target.value }))}
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            handleAddComment(doc.id)
+                          }
+                        }}
+                        placeholder="Write your comment..."
+                        className="flex-1 rounded-lg px-3 py-2 text-xs focus:outline-none"
+                        style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleAddComment(doc.id)}
+                        className="px-3 py-2 rounded-lg text-xs font-medium text-white"
+                        style={{ background: 'var(--gradient-primary)' }}
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </motion.div>

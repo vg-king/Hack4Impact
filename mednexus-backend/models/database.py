@@ -12,9 +12,7 @@ from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, creat
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship, sessionmaker
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
-FRONTEND_ROOT = BACKEND_ROOT.parent
 load_dotenv(BACKEND_ROOT / ".env")
-load_dotenv(FRONTEND_ROOT / ".env", override=False)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./mednexus.db")
 SECRET_KEY = os.getenv("SECRET_KEY", "change_this_in_production")

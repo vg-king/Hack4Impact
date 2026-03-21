@@ -2,21 +2,41 @@ const KEY = import.meta.env.VITE_GEMINI_API_KEY
 const CLAUDE_KEY = import.meta.env.VITE_CLAUDE_API_KEY
 
 async function callGemini(prompt: string, imagePart?: { data: string; mimeType: string }): Promise<string> {
+  if (!KEY) {
+    throw new Error('Missing VITE_GEMINI_API_KEY in .env')
+  }
+
   const parts: object[] = imagePart ? [{ inlineData: imagePart }, { text: prompt }] : [{ text: prompt }]
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
-      }),
+
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-flash']
+  let lastError = 'Unknown Gemini error'
+
+  for (const model of models) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts }],
+          generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
+        }),
+      }
+    )
+
+    if (res.ok) {
+      const d = await res.json()
+      return d.candidates?.[0]?.content?.parts?.[0]?.text || 'No response.'
     }
-  )
-  if (!res.ok) throw new Error(`Gemini ${res.status}: Check your VITE_GEMINI_API_KEY in .env`)
-  const d = await res.json()
-  return d.candidates?.[0]?.content?.parts?.[0]?.text || 'No response.'
+
+    lastError = `Gemini ${res.status} on ${model}`
+    if (res.status !== 404) {
+      const errText = await res.text()
+      throw new Error(`${lastError}: ${errText || 'Request failed'}`)
+    }
+  }
+
+  throw new Error(`${lastError}: none of the configured Gemini models are available for this key`)
 }
 
 // ── General health AI chat ──

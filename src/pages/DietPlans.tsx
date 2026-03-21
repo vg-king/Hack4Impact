@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Apple, Search, ChevronDown, Leaf, Flame, Wheat, Droplets, Brain } from 'lucide-react'
-import { askGemini } from '../utils/gemini'
+import { aiAPI } from '../utils/api'
 
 const dietPlans = [
   {
@@ -101,12 +101,13 @@ export default function DietPlans() {
     setAiLoading(true)
     setAiFor(disease)
     try {
-      const result = await askGemini(
+      const result = await aiAPI.chat(
         `Create a detailed 7-day meal plan for an Indian patient with ${disease}. Include breakfast, lunch, dinner, and 2 snacks per day. Use common Indian foods. Include calorie count per day. Format clearly with Day 1, Day 2, etc.`
       )
-      setAiPlan(result)
-    } catch {
-      setAiPlan('Could not generate AI meal plan. Check VITE_GEMINI_API_KEY in .env')
+      setAiPlan(result.reply || 'No response.')
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : 'Unknown backend error'
+      setAiPlan(`Could not generate AI meal plan: ${detail}`)
     } finally {
       setAiLoading(false)
     }

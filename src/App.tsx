@@ -22,6 +22,7 @@ import DrugInteractions from './pages/DrugInteractions'
 import PrescriptionOCR from './pages/PrescriptionOCR'
 import CVDiseaseDetection from './pages/CVDiseaseDetection'
 import NotFound from './pages/NotFound'
+import Login from './pages/Login'
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
       <div className="relative z-[1] min-h-screen">
         <BrowserRouter>
           <Routes>
+            <Route path="/login" element={<Login />} />
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
               <Route path="/diagnostics" element={<Diagnostics />} />
