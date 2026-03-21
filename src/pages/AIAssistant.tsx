@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bot, Send, User, Sparkles, Stethoscope, Pill, Brain, Loader2, Mic, MicOff, Trash2 } from 'lucide-react'
-import { askGemini } from '../utils/gemini'
+import { aiAPI } from '../utils/api'
 
 interface Message { role: 'user' | 'assistant'; content: string; time: Date }
 
@@ -28,10 +28,12 @@ export default function AIAssistant() {
     setInput('')
     setLoading(true)
     try {
-      const res = await askGemini(text)
-      setMessages(p => [...p, { role: 'assistant', content: res, time: new Date() }])
-    } catch {
-      setMessages(p => [...p, { role: 'assistant', content: '⚠️ Unable to connect to Gemini AI. Check your VITE_GEMINI_API_KEY in .env', time: new Date() }])
+      const res = await aiAPI.chat(text) as { reply?: string }
+      setMessages(p => [...p, { role: 'assistant', content: res.reply || 'No response.', time: new Date() }])
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : 'Unknown MedNexus AI error'
+      const safeDetail = detail.replace(/gemini/gi, 'MedNexus AI')
+      setMessages(p => [...p, { role: 'assistant', content: `⚠️ Backend AI request failed: ${safeDetail}`, time: new Date() }])
     } finally { setLoading(false) }
   }
 
@@ -62,13 +64,13 @@ export default function AIAssistant() {
           </div>
           <div>
             <h1 className="font-bold text-sm" style={{ color: 'var(--text)' }}>AI Health Assistant</h1>
-            <p className="text-xs" style={{ color: 'var(--text2)' }}>Gemini 1.5 Flash · Symptom triage · Prescription analysis · Voice input</p>
+            <p className="text-xs" style={{ color: 'var(--text2)' }}>Backend MedNexus AI proxy · Symptom triage · Prescription analysis · Voice input</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--emerald)' }} />
-            <span className="text-xs font-mono" style={{ color: 'var(--emerald)' }}>Gemini active</span>
+            <span className="text-xs font-mono" style={{ color: 'var(--emerald)' }}>MedNexus AI active</span>
           </div>
           {messages.length > 0 && (
             <button onClick={() => setMessages([])} className="p-1.5 rounded-lg glass-hover" style={{ color: 'var(--text2)' }}>
