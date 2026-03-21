@@ -2,3 +2,12 @@ node_modules
 dist
 .env
 .env.local
+
+# Python backend artifacts
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+mednexus-backend/.env
