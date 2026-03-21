@@ -18,7 +18,7 @@ export default function AIAssistant() {
   const [loading, setLoading] = useState(false)
   const [listening, setListening] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const recRef = useRef<SpeechRecognition | null>(null)
+  const recRef = useRef<SpeechRecognitionLike | null>(null)
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }) }, [messages])
 
@@ -36,11 +36,11 @@ export default function AIAssistant() {
   }
 
   const toggleVoice = () => {
-    const SR = (window.SpeechRecognition || window.webkitSpeechRecognition) as typeof SpeechRecognition | undefined
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SR) { alert('Voice only works in Chrome browser'); return }
     if (listening) { recRef.current?.stop(); setListening(false); return }
     const r = new SR(); r.lang = 'en-IN'; r.continuous = false
-    r.onresult = (e) => { setInput(e.results[0][0].transcript); setListening(false) }
+    r.onresult = (e: SpeechRecognitionEventLike) => { setInput(e.results[0][0].transcript); setListening(false) }
     r.onerror = r.onend = () => setListening(false)
     recRef.current = r; r.start(); setListening(true)
   }
