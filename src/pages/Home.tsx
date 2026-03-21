@@ -100,7 +100,7 @@ export default function Home() {
     },
   ]
 
-  const techBadges = ['Gemini Vision', 'Claude API', 'Spring Boot', 'Apache Kafka', 'Redis', 'Docker', 'MySQL']
+  const techBadges = ['MedNexus AI Vision', 'MedNexus AI Engine', 'Spring Boot', 'Apache Kafka', 'Redis', 'Docker', 'MySQL']
 
   const navigate = useNavigate()
 
@@ -162,7 +162,7 @@ export default function Home() {
               <p className="text-sm mt-1" style={{ color: 'var(--text2)' }}>Total intelligent features</p>
             </div>
             <div className="rounded-xl p-4" style={{ background: 'rgba(13, 36, 50, 0.86)', border: '1px solid var(--border)' }}>
-              <p className="text-xs uppercase" style={{ color: 'var(--text3)' }}>Gemini + Claude</p>
+              <p className="text-xs uppercase" style={{ color: 'var(--text3)' }}>MedNexus AI Engine</p>
               <p className="text-sm mt-1" style={{ color: 'var(--text2)' }}>Dual AI engine powering the platform</p>
             </div>
             <div className="rounded-xl p-4" style={{ background: 'rgba(13, 36, 50, 0.86)', border: '1px solid var(--border)' }}>

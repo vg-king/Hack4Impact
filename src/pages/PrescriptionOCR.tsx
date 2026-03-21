@@ -60,7 +60,7 @@ export default function PrescriptionOCR() {
       setStatus('done')
     } catch (e) {
       setStatus('error')
-      setErrMsg('Could not parse prescription. Tip: Check VITE_GEMINI_API_KEY in .env. Raw response stored.')
+      setErrMsg('Could not parse prescription. Tip: Check MedNexus AI key in .env. Raw response stored.')
     }
   }, [])
 
@@ -79,7 +79,7 @@ export default function PrescriptionOCR() {
           <div>
             <h1 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>Prescription OCR</h1>
             <p className="text-sm" style={{ color: 'var(--text2)' }}>
-              Reads ANY handwriting · Doctor scrawl · Faded paper · Mixed cursive · Powered by Gemini Vision
+              Reads ANY handwriting · Doctor scrawl · Faded paper · Mixed cursive · Powered by MedNexus AI Vision
             </p>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function PrescriptionOCR() {
           {status === 'reading' ? <Loader2 className="w-7 h-7 animate-spin" style={{ color: '#a78bfa' }} /> : <Upload className="w-7 h-7" style={{ color: '#a78bfa' }} />}
         </div>
         <p className="font-semibold mb-1" style={{ color: 'var(--text)' }}>
-          {status === 'reading' ? 'Reading prescription with Gemini Vision...' : 'Drop prescription photo here'}
+          {status === 'reading' ? 'Reading prescription with MedNexus AI Vision...' : 'Drop prescription photo here'}
         </p>
         <p className="text-sm mb-4" style={{ color: 'var(--text2)' }}>
           JPG, PNG, PDF · Phone camera photo works perfectly · Any handwriting style
@@ -116,7 +116,7 @@ export default function PrescriptionOCR() {
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#D85A30' }} />
           <div>
             <p className="text-sm font-semibold" style={{ color: '#D85A30' }}>{errMsg}</p>
-            {rawText && <details className="mt-2"><summary className="text-xs cursor-pointer" style={{ color: 'var(--text3)' }}>Show raw Gemini response</summary>
+            {rawText && <details className="mt-2"><summary className="text-xs cursor-pointer" style={{ color: 'var(--text3)' }}>Show raw MedNexus AI response</summary>
               <pre className="text-xs mt-2 whitespace-pre-wrap" style={{ color: 'var(--text2)' }}>{rawText}</pre>
             </details>}
           </div>
@@ -190,7 +190,7 @@ export default function PrescriptionOCR() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { step: '1', title: 'Upload photo', desc: 'Any prescription — handwritten, typed, faded, torn' },
-            { step: '2', title: 'Gemini Vision OCR', desc: 'Reads even the messiest doctor handwriting using medical context' },
+            { step: '2', title: 'MedNexus AI Vision OCR', desc: 'Reads even the messiest doctor handwriting using medical context' },
             { step: '3', title: 'Drug parsing', desc: 'Extracts drug name, dose, frequency, duration, instructions' },
             { step: '4', title: 'Safety check', desc: 'Flags interactions, allergy risks, and unclear dosages' },
           ].map((s) => (

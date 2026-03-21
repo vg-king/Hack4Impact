@@ -15,9 +15,9 @@ const weeklyData = [
 ]
 
 const features = [
-  { icon: Brain, title: 'AI Assistant', desc: 'Gemini-powered symptom triage', path: '/ai-assistant', color: 'var(--indigo)' },
+  { icon: Brain, title: 'AI Assistant', desc: 'MedNexus AI symptom triage', path: '/ai-assistant', color: 'var(--indigo)' },
   { icon: ScrollText, title: 'Prescription OCR', desc: 'Read any handwritten prescription', path: '/prescription-ocr', color: '#a78bfa' },
-  { icon: Camera, title: 'CV Disease Detect', desc: 'YOLO + Gemini body analysis', path: '/cv-detection', color: '#f472b6' },
+  { icon: Camera, title: 'CV Disease Detect', desc: 'YOLO + MedNexus AI body analysis', path: '/cv-detection', color: '#f472b6' },
   { icon: Dna, title: 'Genomics', desc: 'SNP analysis & drug-gene safety', path: '/genomics', color: '#7F77DD' },
   { icon: Watch, title: 'IoT Wearables', desc: 'Live vitals from Apple Watch & more', path: '/iot-wearables', color: 'var(--teal)' },
   { icon: Lock, title: 'Blockchain EHR', desc: 'Patient-owned zero-knowledge records', path: '/blockchain-ehr', color: '#378ADD' },

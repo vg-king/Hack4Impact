@@ -4,6 +4,12 @@ import { MapPin, Star, Phone, Clock, Search } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 
+type DoctorComment = {
+  id: number
+  text: string
+  createdAt: string
+}
+
 const createIcon = (color: string) =>
   new L.DivIcon({
     className: '',
@@ -34,6 +40,26 @@ export default function FindDoctors() {
   const [search, setSearch] = useState('')
   const [selectedSpec, setSelectedSpec] = useState('All')
   const [selectedDoctor, setSelectedDoctor] = useState<number|null>(null)
+  const [commentDrafts, setCommentDrafts] = useState<Record<number, string>>({})
+  const [commentsByDoctor, setCommentsByDoctor] = useState<Record<number, DoctorComment[]>>({})
+
+  const addComment = (doctorId: number) => {
+    const draft = (commentDrafts[doctorId] || '').trim()
+    if (!draft) return
+
+    const newComment: DoctorComment = {
+      id: Date.now(),
+      text: draft,
+      createdAt: new Date().toLocaleTimeString(),
+    }
+
+    setCommentsByDoctor((prev) => ({
+      ...prev,
+      [doctorId]: [...(prev[doctorId] || []), newComment],
+    }))
+
+    setCommentDrafts((prev) => ({ ...prev, [doctorId]: '' }))
+  }
 
   const filtered = useMemo(() => doctors.filter((d) => {
     const matchSearch = d.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -115,16 +141,56 @@ export default function FindDoctors() {
               </div>
               {selectedDoctor === doc.id && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className="mt-3 pt-3 flex gap-2" style={{ borderTop: '1px solid var(--border)' }}>
-                  <a href={`tel:${doc.phone}`}
-                    className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-medium text-white"
-                    style={{ background: 'var(--gradient-primary)' }}>
-                    <Phone className="w-3 h-3" /> Call
-                  </a>
-                  <button className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-medium"
-                    style={{ border: '1px solid var(--border)', color: 'var(--text2)' }}>
-                    <Clock className="w-3 h-3" /> Book Slot
-                  </button>
+                  onClick={(e) => e.stopPropagation()}
+                  className="mt-3 pt-3 space-y-3" style={{ borderTop: '1px solid var(--border)' }}>
+                  <div className="flex gap-2">
+                    <a href={`tel:${doc.phone}`}
+                      className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-medium text-white"
+                      style={{ background: 'var(--gradient-primary)' }}>
+                      <Phone className="w-3 h-3" /> Call
+                    </a>
+                    <button className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-medium"
+                      style={{ border: '1px solid var(--border)', color: 'var(--text2)' }}>
+                      <Clock className="w-3 h-3" /> Book Slot
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold" style={{ color: 'var(--text2)' }}>Comments</p>
+                    <div className="flex gap-2">
+                      <input
+                        value={commentDrafts[doc.id] || ''}
+                        onChange={(e) => setCommentDrafts((prev) => ({ ...prev, [doc.id]: e.target.value }))}
+                        onClick={(e) => e.stopPropagation()}
+                        placeholder="Write your comment..."
+                        className="flex-1 rounded-lg px-3 py-2 text-xs focus:outline-none"
+                        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          addComment(doc.id)
+                        }}
+                        className="px-3 py-2 rounded-lg text-xs font-medium text-white"
+                        style={{ background: 'var(--gradient-primary)' }}>
+                        Add
+                      </button>
+                    </div>
+
+                    {(commentsByDoctor[doc.id] || []).length > 0 && (
+                      <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
+                        {(commentsByDoctor[doc.id] || []).map((comment) => (
+                          <div
+                            key={comment.id}
+                            className="rounded-lg px-3 py-2"
+                            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                            <p className="text-xs" style={{ color: 'var(--text)' }}>{comment.text}</p>
+                            <p className="text-[10px] mt-1" style={{ color: 'var(--text3)' }}>{comment.createdAt}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
               )}
             </motion.div>

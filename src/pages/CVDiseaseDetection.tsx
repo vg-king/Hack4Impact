@@ -95,7 +95,7 @@ export default function CVDiseaseDetection() {
       // Draw bboxes after image loads
       const img = new Image(); img.onload = () => drawBBoxes(parsed.detections, img); img.src = url
     } catch {
-      setStatus('error'); setErrMsg('Analysis failed. Ensure VITE_GEMINI_API_KEY is set in .env. Try a clearer image.')
+      setStatus('error'); setErrMsg('Analysis failed. Ensure MedNexus AI key is set in .env. Try a clearer image.')
     }
   }, [selectedCat])
 
@@ -113,7 +113,7 @@ export default function CVDiseaseDetection() {
           <div>
             <h1 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>CV Disease Detection</h1>
             <p className="text-sm" style={{ color: 'var(--text2)' }}>
-              YOLOv8 + OpenCV + Gemini Vision · 20+ conditions · Bounding box localization · ICD-10 coding
+              YOLOv8 + OpenCV + MedNexus AI Vision · 20+ conditions · Bounding box localization · ICD-10 coding
             </p>
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function CVDiseaseDetection() {
           {status === 'analyzing' ? <Loader2 className="w-7 h-7 animate-spin" style={{ color: '#f472b6' }} /> : <Upload className="w-7 h-7" style={{ color: '#f472b6' }} />}
         </div>
         <p className="font-semibold mb-1" style={{ color: 'var(--text)' }}>
-          {status === 'analyzing' ? `Analyzing ${selectedCat} image with Gemini Vision...` : `Upload ${categories.find(c=>c.id===selectedCat)?.label} image`}
+          {status === 'analyzing' ? `Analyzing ${selectedCat} image with MedNexus AI Vision...` : `Upload ${categories.find(c=>c.id===selectedCat)?.label} image`}
         </p>
         <p className="text-sm" style={{ color: 'var(--text2)' }}>
           Drop image or click · YOLO bounding boxes drawn automatically

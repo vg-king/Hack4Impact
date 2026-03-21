@@ -13,7 +13,7 @@ async function callGemini(prompt: string, imagePart?: { data: string; mimeType: 
       }),
     }
   )
-  if (!res.ok) throw new Error(`Gemini ${res.status}: Check your VITE_GEMINI_API_KEY in .env`)
+  if (!res.ok) throw new Error(`MedNexus AI ${res.status}: Check your AI key in .env`)
   const d = await res.json()
   return d.candidates?.[0]?.content?.parts?.[0]?.text || 'No response.'
 }

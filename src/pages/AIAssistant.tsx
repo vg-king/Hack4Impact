@@ -137,7 +137,7 @@ export default function AIAssistant() {
             <div className="glass rounded-2xl px-4 py-3">
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--teal)' }} />
-                <span className="text-xs" style={{ color: 'var(--text2)' }}>Gemini is thinking...</span>
+                <span className="text-xs" style={{ color: 'var(--text2)' }}>MedNexus AI is thinking...</span>
               </div>
             </div>
           </motion.div>
